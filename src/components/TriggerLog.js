@@ -4,7 +4,6 @@
  */
 
 import { getHabits, getTriggers, saveTrigger, escHtml } from '../lib/storage.js';
-import { getTriggerFrequency } from '../lib/analytics.js';
 import { getTriggerAIInsight } from '../lib/gemini.js';
 import { showToast } from './Toast.js';
 

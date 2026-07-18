@@ -4,7 +4,7 @@
  */
 
 import { getHabits, saveHabit, deleteHabit, getCheckIns, logCheckIn, removeCheckIn, escHtml, getTriggers } from '../lib/storage.js';
-import { calculateStreak, getRiskLevel, generateNudge, toDateString, wasCheckedIn } from '../lib/habitEngine.js';
+import { calculateStreak, getRiskLevel, toDateString, wasCheckedIn } from '../lib/habitEngine.js';
 import { showToast } from './Toast.js';
 
 const CATEGORIES = ['Digital', 'Substance', 'Behavioral', 'Physical', 'Emotional', 'Other'];

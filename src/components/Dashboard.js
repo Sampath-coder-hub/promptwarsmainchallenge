@@ -6,7 +6,6 @@
 import { getHabits, getCheckIns, getTriggers, escHtml } from '../lib/storage.js';
 import { calculateStreak, getRiskLevel, generateNudge, getDailyScore, toDateString, wasCheckedIn } from '../lib/habitEngine.js';
 import { getWeeklyTrend, getComplianceRate } from '../lib/analytics.js';
-import { getRandomCoachingResponse } from '../data/mockResponses.js';
 
 export function renderDashboard(container) {
   const habits = getHabits();
