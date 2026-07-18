@@ -3,16 +3,12 @@
  * @module TriggerLog
  */
 
-import { getHabits, getTriggers, saveTrigger } from '../lib/storage.js';
+import { getHabits, getTriggers, saveTrigger, escHtml } from '../lib/storage.js';
 import { getTriggerFrequency } from '../lib/analytics.js';
 import { getTriggerAIInsight } from '../lib/gemini.js';
 import { showToast } from './Toast.js';
 
 const TRIGGER_TYPES = ['Stress', 'Boredom', 'Social', 'Emotional', 'Environmental', 'Physical', 'Time-based', 'General'];
-
-function escHtml(str) {
-  return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
 
 export function renderTriggerLog(container) {
   const habits = getHabits();

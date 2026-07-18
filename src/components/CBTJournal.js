@@ -3,14 +3,10 @@
  * @module CBTJournal
  */
 
-import { getJournal, saveJournalEntry } from '../lib/storage.js';
+import { getJournal, saveJournalEntry, escHtml } from '../lib/storage.js';
 import { detectDistortion } from '../lib/cbtEngine.js';
 import { getCBTReframe } from '../lib/gemini.js';
 import { showToast } from './Toast.js';
-
-function escHtml(str) {
-  return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
 
 export function renderCBTJournal(container) {
   container.innerHTML = `

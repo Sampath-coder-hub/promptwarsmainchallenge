@@ -3,18 +3,14 @@
  * @module HabitTracker
  */
 
-import { getHabits, saveHabit, deleteHabit, getCheckIns, logCheckIn, removeCheckIn } from '../lib/storage.js';
+import { getHabits, saveHabit, deleteHabit, getCheckIns, logCheckIn, removeCheckIn, escHtml } from '../lib/storage.js';
 import { calculateStreak, getRiskLevel, generateNudge, toDateString, wasCheckedIn } from '../lib/habitEngine.js';
 import { showToast } from './Toast.js';
 
 const CATEGORIES = ['Digital', 'Substance', 'Behavioral', 'Physical', 'Emotional', 'Other'];
 
-function escHtml(str) {
-    return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}
-
 export function renderHabitTracker(container) {
-    container.innerHTML = `
+  container.innerHTML = `
     <h1 class="page-title">My Habits</h1>
     <p class="page-subtitle">Track and manage the habits you're working to overcome</p>
 
@@ -53,49 +49,49 @@ export function renderHabitTracker(container) {
     </div>
   `;
 
-    // Form submission
-    container.querySelector('#add-habit-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        const name = container.querySelector('#habit-name').value.trim();
-        if (!name) {
-            showToast('Habit name is required', 'error');
-            container.querySelector('#habit-name').focus();
-            return;
-        }
-        try {
-            saveHabit({
-                name,
-                category: container.querySelector('#habit-category').value,
-                goal: container.querySelector('#habit-goal').value.trim(),
-            });
-            container.querySelector('#add-habit-form').reset();
-            container.querySelector('#habits-grid').innerHTML = renderHabitsGrid();
-            bindHabitActions(container);
-            showToast(`"${name}" added to your tracking list!`, 'success');
-        } catch (err) {
-            showToast(err.message, 'error');
-        }
-    });
+  // Form submission
+  container.querySelector('#add-habit-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = container.querySelector('#habit-name').value.trim();
+    if (!name) {
+      showToast('Habit name is required', 'error');
+      container.querySelector('#habit-name').focus();
+      return;
+    }
+    try {
+      saveHabit({
+        name,
+        category: container.querySelector('#habit-category').value,
+        goal: container.querySelector('#habit-goal').value.trim(),
+      });
+      container.querySelector('#add-habit-form').reset();
+      container.querySelector('#habits-grid').innerHTML = renderHabitsGrid();
+      bindHabitActions(container);
+      showToast(`"${name}" added to your tracking list!`, 'success');
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  });
 
-    bindHabitActions(container);
+  bindHabitActions(container);
 }
 
 function renderHabitsGrid() {
-    const habits = getHabits();
-    const today = toDateString(new Date());
-    if (habits.length === 0) {
-        return `<div class="card empty-state"><div class="empty-icon">🌿</div>
+  const habits = getHabits();
+  const today = toDateString(new Date());
+  if (habits.length === 0) {
+    return `<div class="card empty-state"><div class="empty-icon">🌿</div>
       <div class="empty-title">No habits yet</div>
       <div class="empty-desc">Add your first habit above to begin your journey.</div></div>`;
-    }
-    return `<div class="grid-2">
+  }
+  return `<div class="grid-2">
     ${habits.map(h => {
-        const checkIns = getCheckIns(h.id);
-        const relapses = [];
-        const streak = calculateStreak(checkIns);
-        const risk = getRiskLevel(relapses);
-        const checkedToday = wasCheckedIn(checkIns, today);
-        return `
+    const checkIns = getCheckIns(h.id);
+    const relapses = [];
+    const streak = calculateStreak(checkIns);
+    const risk = getRiskLevel(relapses);
+    const checkedToday = wasCheckedIn(checkIns, today);
+    return `
       <article class="card habit-card ${checkedToday ? 'checked-in' : ''} ${risk === 'HIGH' ? 'high-risk' : ''}"
         role="listitem" aria-label="Habit: ${escHtml(h.name)}">
         <div class="flex justify-between items-center mb-2">
@@ -119,35 +115,35 @@ function renderHabitsGrid() {
             aria-label="Delete habit: ${escHtml(h.name)}">🗑</button>
         </div>
       </article>`;
-    }).join('')}
+  }).join('')}
   </div>`;
 }
 
 function bindHabitActions(container) {
-    container.querySelectorAll('.checkin-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const id = btn.dataset.id;
-            const checked = btn.dataset.checked === 'true';
-            if (checked) {
-                removeCheckIn(id);
-                showToast('Check-in removed', 'info');
-            } else {
-                logCheckIn(id);
-                showToast('✅ Great work! Check-in logged!', 'success');
-            }
-            container.querySelector('#habits-grid').innerHTML = renderHabitsGrid();
-            bindHabitActions(container);
-        });
+  container.querySelectorAll('.checkin-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.dataset.id;
+      const checked = btn.dataset.checked === 'true';
+      if (checked) {
+        removeCheckIn(id);
+        showToast('Check-in removed', 'info');
+      } else {
+        logCheckIn(id);
+        showToast('✅ Great work! Check-in logged!', 'success');
+      }
+      container.querySelector('#habits-grid').innerHTML = renderHabitsGrid();
+      bindHabitActions(container);
     });
+  });
 
-    container.querySelectorAll('.delete-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            if (confirm('Delete this habit and all its data? This cannot be undone.')) {
-                deleteHabit(btn.dataset.id);
-                container.querySelector('#habits-grid').innerHTML = renderHabitsGrid();
-                bindHabitActions(container);
-                showToast('Habit deleted', 'info');
-            }
-        });
+  container.querySelectorAll('.delete-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (confirm('Delete this habit and all its data? This cannot be undone.')) {
+        deleteHabit(btn.dataset.id);
+        container.querySelector('#habits-grid').innerHTML = renderHabitsGrid();
+        bindHabitActions(container);
+        showToast('Habit deleted', 'info');
+      }
     });
+  });
 }

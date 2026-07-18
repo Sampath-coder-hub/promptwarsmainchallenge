@@ -3,7 +3,7 @@
  * @module Dashboard
  */
 
-import { getHabits, getCheckIns, getTriggers } from '../lib/storage.js';
+import { getHabits, getCheckIns, getTriggers, escHtml } from '../lib/storage.js';
 import { calculateStreak, getRiskLevel, generateNudge, getDailyScore, toDateString, wasCheckedIn } from '../lib/habitEngine.js';
 import { getWeeklyTrend, getComplianceRate } from '../lib/analytics.js';
 import { getRandomCoachingResponse } from '../data/mockResponses.js';
@@ -198,6 +198,3 @@ function formatDate(d) {
   return d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 }
 
-function escHtml(str) {
-  return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-}

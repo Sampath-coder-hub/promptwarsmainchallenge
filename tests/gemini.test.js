@@ -98,4 +98,34 @@ describe('gemini.js API operations', () => {
         const response = await getCoachResponse(null);
         expect(response).toBeDefined();
     });
+
+    test('getApiKey catch block is triggered when env access throws', async () => {
+        const originalEnv = process.env;
+        Object.defineProperty(process, 'env', {
+            get() { throw new Error('Simulated env access error'); },
+            configurable: true
+        });
+
+        const response = await getCoachResponse('Test');
+        expect(response).toBeDefined();
+
+        Object.defineProperty(process, 'env', {
+            value: originalEnv,
+            writable: true,
+            configurable: true
+        });
+    });
+
+    test('handles empty candidates from API gracefully', async () => {
+        process.env.VITE_GEMINI_API_KEY = 'valid_key';
+        global.fetch.mockResolvedValueOnce({
+            ok: true,
+            json: async () => ({
+                candidates: []
+            })
+        });
+
+        const response = await getCoachResponse('Help me');
+        expect(response).toBe('');
+    });
 });

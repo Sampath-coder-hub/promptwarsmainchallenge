@@ -12,7 +12,7 @@ const KEYS = {
 };
 
 /** @type {typeof window.localStorage | null} */
-let _store = typeof localStorage !== 'undefined' ? localStorage : null;
+let _store = (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') ? window.localStorage : null;
 
 /**
  * Allows injecting a mock storage for testing.
@@ -208,4 +208,13 @@ export function getSettings() {
 
 export function saveSettings(settings) {
     safeSet(KEYS.SETTINGS, { ...getSettings(), ...settings });
+}
+
+/**
+ * Safe HTML escaping to prevent XSS injection.
+ * @param {string} str
+ * @returns {string}
+ */
+export function escHtml(str) {
+    return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }

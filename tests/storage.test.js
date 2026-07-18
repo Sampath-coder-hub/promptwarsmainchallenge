@@ -18,6 +18,7 @@ import {
     saveTrigger,
     getSettings,
     saveSettings,
+    escHtml,
 } from '../src/lib/storage.js';
 
 // ─── In-memory mock localStorage ──────────────────────────────────────────
@@ -252,5 +253,43 @@ describe('null store operations', () => {
         expect(getHabits()).toEqual([]);
         saveHabit({ name: 'Testing null' });
         expect(getHabits()).toEqual([]);
+    });
+});
+
+describe('undefined localStorage initialisation', () => {
+    afterEach(() => {
+        delete global.window;
+    });
+
+    it('covers case where window is undefined at start', async () => {
+        delete global.window;
+        const testStorage = await import('../src/lib/storage.js?no-storage-cache-bust-1=' + Date.now());
+        expect(testStorage.getHabits()).toEqual([]);
+    });
+
+    it('covers case where window is defined but localStorage is undefined', async () => {
+        global.window = {
+            localStorage: undefined
+        };
+        const testStorage = await import('../src/lib/storage.js?no-storage-cache-bust-2=' + Date.now());
+        expect(testStorage.getHabits()).toEqual([]);
+    });
+
+    it('covers case where window is defined and localStorage is defined', async () => {
+        global.window = {
+            localStorage: createMockStore()
+        };
+        const testStorage = await import('../src/lib/storage.js?no-storage-cache-bust-3=' + Date.now());
+        expect(testStorage.getHabits()).toEqual([]);
+    });
+});
+
+describe('escHtml utility', () => {
+    it('escapes standard HTML special characters', () => {
+        expect(escHtml('<script>alert("hello & welcome");</script>')).toBe('&lt;script&gt;alert(&quot;hello &amp; welcome&quot;);&lt;/script&gt;');
+    });
+
+    it('returns empty string if passed empty string', () => {
+        expect(escHtml('')).toBe('');
     });
 });
