@@ -3,7 +3,7 @@
  * @module HabitTracker
  */
 
-import { getHabits, saveHabit, deleteHabit, getCheckIns, logCheckIn, removeCheckIn, escHtml } from '../lib/storage.js';
+import { getHabits, saveHabit, deleteHabit, getCheckIns, logCheckIn, removeCheckIn, escHtml, getTriggers } from '../lib/storage.js';
 import { calculateStreak, getRiskLevel, generateNudge, toDateString, wasCheckedIn } from '../lib/habitEngine.js';
 import { showToast } from './Toast.js';
 
@@ -87,7 +87,7 @@ function renderHabitsGrid() {
   return `<div class="grid-2">
     ${habits.map(h => {
     const checkIns = getCheckIns(h.id);
-    const relapses = [];
+    const relapses = getTriggers(h.id).map(t => t.timestamp);
     const streak = calculateStreak(checkIns);
     const risk = getRiskLevel(relapses);
     const checkedToday = wasCheckedIn(checkIns, today);
