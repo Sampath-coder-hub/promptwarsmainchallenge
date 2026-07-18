@@ -96,6 +96,13 @@ export function renderAiCoach(container) {
   container.querySelectorAll('.quick-prompt').forEach(btn => {
     btn.addEventListener('click', () => sendMessage(btn.textContent));
   });
+
+  const prefill = sessionStorage.getItem('coach_prefill_prompt');
+  if (prefill) {
+    sessionStorage.removeItem('coach_prefill_prompt');
+    inputEl.value = prefill;
+    sendMessage();
+  }
 }
 
 function renderMessage(role, text) {

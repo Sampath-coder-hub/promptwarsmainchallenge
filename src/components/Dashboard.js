@@ -63,6 +63,12 @@ export function renderDashboard(container) {
         <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--clr-primary-light);">AI Coach Insight</span>
       </div>
       <p style="font-size:0.9rem;line-height:1.7;">${nudge}</p>
+      ${habits.length > 0 ? `
+      <div class="flex gap-2 mt-3">
+        <button class="btn btn-sm btn-primary" id="ask-coach-nudge-btn">💬 Ask Coach</button>
+        <button class="btn btn-sm btn-secondary" id="cbt-nudge-btn">📝 CBT Reframe</button>
+      </div>
+      ` : ''}
     </div>
 
     <!-- Habit Progress Table -->
@@ -125,6 +131,20 @@ export function renderDashboard(container) {
       ${renderTipCard('🎯', 'HALT Check', 'Ask yourself: Am I Hungry, Angry, Lonely, or Tired? These states amplify cravings significantly.')}
     </div>
   `;
+
+  if (habits.length > 0) {
+    container.querySelector('#ask-coach-nudge-btn')?.addEventListener('click', () => {
+      const prompt = `I saw this AI Coach Insight: "${nudge.replace(/"/g, '\\"')}". Can you give me more specific strategies regarding this?`;
+      sessionStorage.setItem('coach_prefill_prompt', prompt);
+      window.__habitflow__.navigateTo('coach');
+    });
+
+    container.querySelector('#cbt-nudge-btn')?.addEventListener('click', () => {
+      const prompt = `I am struggling with my habit right now. I have a negative automatic thought: "I am going to fail."`;
+      sessionStorage.setItem('cbt_prefill_thought', prompt);
+      window.__habitflow__.navigateTo('cbt');
+    });
+  }
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────

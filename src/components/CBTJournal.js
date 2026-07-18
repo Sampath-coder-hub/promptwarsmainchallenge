@@ -9,11 +9,11 @@ import { getCBTReframe } from '../lib/gemini.js';
 import { showToast } from './Toast.js';
 
 function escHtml(str) {
-    return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 export function renderCBTJournal(container) {
-    container.innerHTML = `
+  container.innerHTML = `
     <h1 class="page-title">CBT Journal 🧠</h1>
     <p class="page-subtitle">Challenge negative automatic thoughts and reframe them with AI-guided Socratic questioning</p>
 
@@ -69,77 +69,84 @@ export function renderCBTJournal(container) {
     </div>
   `;
 
-    const thoughtInput = container.querySelector('#cbt-thought');
-    const distortionPreview = container.querySelector('#distortion-preview');
-    const distortionLabel = container.querySelector('#distortion-label');
-    const reframeResult = container.querySelector('#reframe-result');
-    const reframeText = container.querySelector('#reframe-text');
-    const submitBtn = container.querySelector('#cbt-submit-btn');
+  const thoughtInput = container.querySelector('#cbt-thought');
+  const distortionPreview = container.querySelector('#distortion-preview');
+  const distortionLabel = container.querySelector('#distortion-label');
+  const reframeResult = container.querySelector('#reframe-result');
+  const reframeText = container.querySelector('#reframe-text');
+  const submitBtn = container.querySelector('#cbt-submit-btn');
 
-    let currentThought = '', currentDistortion = { distortion: 'none', label: '' }, currentReframe = '';
+  let currentThought = '', currentDistortion = { distortion: 'none', label: '' }, currentReframe = '';
 
-    // Live distortion detection
-    thoughtInput.addEventListener('input', () => {
-        const val = thoughtInput.value;
-        if (val.length > 10) {
-            currentDistortion = detectDistortion(val);
-            if (currentDistortion.distortion !== 'none') {
-                distortionLabel.textContent = `Detected: ${currentDistortion.label}`;
-                distortionPreview.classList.remove('hidden');
-            } else {
-                distortionPreview.classList.add('hidden');
-            }
-        } else {
-            distortionPreview.classList.add('hidden');
-        }
-    });
-
-    // Form submit → AI reframe
-    container.querySelector('#cbt-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const thought = thoughtInput.value.trim();
-        if (!thought) { showToast('Please enter your negative thought', 'error'); return; }
-
-        currentThought = thought;
-        currentDistortion = detectDistortion(thought);
-        submitBtn.disabled = true;
-        submitBtn.textContent = '⏳ Generating reframe...';
-        reframeResult.classList.add('hidden');
-
-        try {
-            currentReframe = await getCBTReframe(thought, currentDistortion.label);
-            reframeText.innerHTML = currentReframe
-                .replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                .replace(/\n/g, '<br>');
-            reframeResult.classList.remove('hidden');
-        } catch {
-            showToast('Failed to get reframe — try again', 'error');
-        } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<span aria-hidden="true">🔍</span> Analyse &amp; Reframe with AI';
-        }
-    });
-
-    // Save entry
-    container.querySelector('#save-entry-btn')?.addEventListener('click', () => {
-        saveJournalEntry({ thought: currentThought, distortion: currentDistortion.distortion, reframe: currentReframe });
-        container.querySelector('#journal-list').innerHTML = renderJournalList();
-        reframeResult.classList.add('hidden');
-        thoughtInput.value = '';
+  // Live distortion detection
+  thoughtInput.addEventListener('input', () => {
+    const val = thoughtInput.value;
+    if (val.length > 10) {
+      currentDistortion = detectDistortion(val);
+      if (currentDistortion.distortion !== 'none') {
+        distortionLabel.textContent = `Detected: ${currentDistortion.label}`;
+        distortionPreview.classList.remove('hidden');
+      } else {
         distortionPreview.classList.add('hidden');
-        showToast('Journal entry saved!', 'success');
-    });
+      }
+    } else {
+      distortionPreview.classList.add('hidden');
+    }
+  });
+
+  // Form submit → AI reframe
+  container.querySelector('#cbt-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const thought = thoughtInput.value.trim();
+    if (!thought) { showToast('Please enter your negative thought', 'error'); return; }
+
+    currentThought = thought;
+    currentDistortion = detectDistortion(thought);
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Generating reframe...';
+    reframeResult.classList.add('hidden');
+
+    try {
+      currentReframe = await getCBTReframe(thought, currentDistortion.label);
+      reframeText.innerHTML = currentReframe
+        .replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\n/g, '<br>');
+      reframeResult.classList.remove('hidden');
+    } catch {
+      showToast('Failed to get reframe — try again', 'error');
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span aria-hidden="true">🔍</span> Analyse &amp; Reframe with AI';
+    }
+  });
+
+  // Save entry
+  container.querySelector('#save-entry-btn')?.addEventListener('click', () => {
+    saveJournalEntry({ thought: currentThought, distortion: currentDistortion.distortion, reframe: currentReframe });
+    container.querySelector('#journal-list').innerHTML = renderJournalList();
+    reframeResult.classList.add('hidden');
+    thoughtInput.value = '';
+    distortionPreview.classList.add('hidden');
+    showToast('Journal entry saved!', 'success');
+  });
+
+  const prefill = sessionStorage.getItem('cbt_prefill_thought');
+  if (prefill) {
+    sessionStorage.removeItem('cbt_prefill_thought');
+    thoughtInput.value = prefill;
+    thoughtInput.dispatchEvent(new Event('input'));
+  }
 }
 
 function renderJournalList() {
-    const entries = getJournal();
-    if (entries.length === 0) {
-        return `<div class="card empty-state"><div class="empty-icon">📖</div>
+  const entries = getJournal();
+  if (entries.length === 0) {
+    return `<div class="card empty-state"><div class="empty-icon">📖</div>
       <div class="empty-title">No entries yet</div>
       <div class="empty-desc">Complete your first thought record to build your journal.</div></div>`;
-    }
-    return entries.slice(0, 10).map(entry => `
+  }
+  return entries.slice(0, 10).map(entry => `
     <article class="card" style="padding:16px 18px;margin-bottom:12px;" role="listitem"
       aria-label="Journal entry from ${new Date(entry.timestamp).toLocaleDateString()}">
       <div class="flex justify-between items-center mb-2">

@@ -11,13 +11,13 @@ import { showToast } from './Toast.js';
 const TRIGGER_TYPES = ['Stress', 'Boredom', 'Social', 'Emotional', 'Environmental', 'Physical', 'Time-based', 'General'];
 
 function escHtml(str) {
-    return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  return String(str).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 export function renderTriggerLog(container) {
-    const habits = getHabits();
+  const habits = getHabits();
 
-    container.innerHTML = `
+  container.innerHTML = `
     <h1 class="page-title">Trigger Log ⚡</h1>
     <p class="page-subtitle">Identify and understand what triggers your cravings to build better coping strategies</p>
 
@@ -61,6 +61,10 @@ export function renderTriggerLog(container) {
           <!-- AI Insight -->
           <div id="trigger-insight" class="hidden mt-4" aria-live="polite" role="region" aria-label="AI trigger insight">
             <div class="reframe-box" id="insight-text"></div>
+            <div class="flex gap-2 mt-3" style="justify-content:flex-end;">
+              <button type="button" class="btn btn-sm btn-secondary" id="discuss-coach-btn">💬 Ask AI Coach</button>
+              <button type="button" class="btn btn-sm btn-secondary" id="cbt-from-trigger-btn">🧠 CBT Reframe</button>
+            </div>
           </div>
         </div>
       </div>
@@ -80,65 +84,80 @@ export function renderTriggerLog(container) {
     </div>
   `;
 
-    // Intensity slider display
-    const slider = container.querySelector('#trigger-intensity');
-    const display = container.querySelector('#intensity-display');
-    slider.addEventListener('input', () => {
-        display.textContent = slider.value;
-        slider.setAttribute('aria-valuenow', slider.value);
-        const val = parseInt(slider.value);
-        display.style.color = val >= 8 ? 'var(--clr-danger)' : val >= 5 ? 'var(--clr-warning)' : 'var(--clr-success)';
-    });
+  let lastLogged = { type: 'General', intensity: 5, note: '', habitName: 'my habit' };
 
-    // Form submit
-    container.querySelector('#trigger-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const habitId = container.querySelector('#trigger-habit').value;
-        if (!habitId) { showToast('Please select a habit', 'error'); return; }
+  // Intensity slider display
+  const slider = container.querySelector('#trigger-intensity');
+  const display = container.querySelector('#intensity-display');
+  slider.addEventListener('input', () => {
+    display.textContent = slider.value;
+    slider.setAttribute('aria-valuenow', slider.value);
+    const val = parseInt(slider.value);
+    display.style.color = val >= 8 ? 'var(--clr-danger)' : val >= 5 ? 'var(--clr-warning)' : 'var(--clr-success)';
+  });
 
-        const triggerType = container.querySelector('#trigger-type').value;
-        const intensity = parseInt(container.querySelector('#trigger-intensity').value);
-        const note = container.querySelector('#trigger-note').value.trim();
-        const habitName = habits.find(h => h.id === habitId)?.name || 'your habit';
+  // Form submit
+  container.querySelector('#trigger-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const habitId = container.querySelector('#trigger-habit').value;
+    if (!habitId) { showToast('Please select a habit', 'error'); return; }
 
-        saveTrigger({ habitId, type: triggerType, intensity, note });
+    const triggerType = container.querySelector('#trigger-type').value;
+    const intensity = parseInt(container.querySelector('#trigger-intensity').value);
+    const note = container.querySelector('#trigger-note').value.trim();
+    const habitName = habits.find(h => h.id === habitId)?.name || 'your habit';
 
-        const logBtn = container.querySelector('#log-trigger-btn');
-        logBtn.disabled = true;
-        logBtn.textContent = '⏳ Getting AI insight...';
+    saveTrigger({ habitId, type: triggerType, intensity, note });
+    lastLogged = { type: triggerType, intensity, note, habitName };
 
-        try {
-            const insight = await getTriggerAIInsight(triggerType, habitName);
-            const insightEl = container.querySelector('#trigger-insight');
-            container.querySelector('#insight-text').innerHTML = '🧠 <strong>AI Insight:</strong> ' +
-                String(insight).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-            insightEl.classList.remove('hidden');
-        } catch {
-            showToast('Could not load AI insight', 'error');
-        } finally {
-            logBtn.disabled = false;
-            logBtn.innerHTML = '<span aria-hidden="true">⚡</span> Log Trigger &amp; Get Insight';
-        }
+    const logBtn = container.querySelector('#log-trigger-btn');
+    logBtn.disabled = true;
+    logBtn.textContent = '⏳ Getting AI insight...';
 
-        container.querySelector('#trigger-form').reset();
-        display.textContent = '5';
-        container.querySelector('#trigger-list').innerHTML = renderTriggerList();
-        container.querySelector('#frequency-chart').innerHTML = renderFrequencyBars(habits).outerHTML || renderFrequencyBars(habits);
-        showToast('Craving event logged!', 'success');
-    });
+    try {
+      const insight = await getTriggerAIInsight(triggerType, habitName);
+      const insightEl = container.querySelector('#trigger-insight');
+      container.querySelector('#insight-text').innerHTML = '🧠 <strong>AI Insight:</strong> ' +
+        String(insight).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+      insightEl.classList.remove('hidden');
+    } catch {
+      showToast('Could not load AI insight', 'error');
+    } finally {
+      logBtn.disabled = false;
+      logBtn.innerHTML = '<span aria-hidden="true">⚡</span> Log Trigger &amp; Get Insight';
+    }
+
+    container.querySelector('#trigger-form').reset();
+    display.textContent = '5';
+    container.querySelector('#trigger-list').innerHTML = renderTriggerList();
+    container.querySelector('#frequency-chart').innerHTML = renderFrequencyBars(habits).outerHTML || renderFrequencyBars(habits);
+    showToast('Craving event logged!', 'success');
+  });
+
+  container.querySelector('#discuss-coach-btn').addEventListener('click', () => {
+    const prompt = `I just logged a craving event: ${lastLogged.type} (Intensity ${lastLogged.intensity}/10) for "${lastLogged.habitName}". ${lastLogged.note ? `Context: ${lastLogged.note}.` : ''} Can you help me cope with this trigger?`;
+    sessionStorage.setItem('coach_prefill_prompt', prompt);
+    window.__habitflow__.navigateTo('coach');
+  });
+
+  container.querySelector('#cbt-from-trigger-btn').addEventListener('click', () => {
+    const prompt = `I feel triggered by ${lastLogged.type.toLowerCase()} and thought: "This craving is too strong, I always fail."`;
+    sessionStorage.setItem('cbt_prefill_thought', prompt);
+    window.__habitflow__.navigateTo('cbt');
+  });
 }
 
 function renderFrequencyBars(habits) {
-    const allTriggers = getTriggers();
-    const freq = allTriggers.reduce((acc, t) => { acc[t.type] = (acc[t.type] || 0) + 1; return acc; }, {});
-    const entries = Object.entries(freq).sort((a, b) => b[1] - a[1]);
-    const max = entries[0]?.[1] || 1;
+  const allTriggers = getTriggers();
+  const freq = allTriggers.reduce((acc, t) => { acc[t.type] = (acc[t.type] || 0) + 1; return acc; }, {});
+  const entries = Object.entries(freq).sort((a, b) => b[1] - a[1]);
+  const max = entries[0]?.[1] || 1;
 
-    if (entries.length === 0) {
-        return '<div class="empty-state" style="padding:24px;"><div class="empty-icon">📊</div><div class="empty-title">No triggers logged yet</div></div>';
-    }
+  if (entries.length === 0) {
+    return '<div class="empty-state" style="padding:24px;"><div class="empty-icon">📊</div><div class="empty-title">No triggers logged yet</div></div>';
+  }
 
-    return entries.slice(0, 6).map(([type, count]) => `
+  return entries.slice(0, 6).map(([type, count]) => `
     <div style="margin-bottom:12px;">
       <div class="flex justify-between" style="margin-bottom:4px;">
         <span style="font-size:0.82rem;font-weight:600;">${escHtml(type)}</span>
@@ -152,15 +171,15 @@ function renderFrequencyBars(habits) {
 }
 
 function renderTriggerList() {
-    const triggers = getTriggers().slice(0, 15);
-    if (triggers.length === 0) {
-        return `<div class="card empty-state" style="padding:24px;"><div class="empty-icon">⚡</div>
+  const triggers = getTriggers().slice(0, 15);
+  if (triggers.length === 0) {
+    return `<div class="card empty-state" style="padding:24px;"><div class="empty-icon">⚡</div>
       <div class="empty-title">No triggers logged yet</div>
       <div class="empty-desc">Log your first craving event to identify patterns.</div></div>`;
-    }
-    return triggers.map(t => {
-        const intClass = t.intensity >= 8 ? 'intensity-high' : t.intensity >= 5 ? 'intensity-med' : 'intensity-low';
-        return `<div class="trigger-item" role="listitem" aria-label="Trigger: ${escHtml(t.type)}, intensity ${t.intensity}">
+  }
+  return triggers.map(t => {
+    const intClass = t.intensity >= 8 ? 'intensity-high' : t.intensity >= 5 ? 'intensity-med' : 'intensity-low';
+    return `<div class="trigger-item" role="listitem" aria-label="Trigger: ${escHtml(t.type)}, intensity ${t.intensity}">
       <div class="trigger-intensity ${intClass}" aria-hidden="true">${t.intensity}</div>
       <div style="flex:1;">
         <div style="font-weight:600;font-size:0.88rem;">${escHtml(t.type)}</div>
@@ -170,5 +189,5 @@ function renderTriggerList() {
         ${new Date(t.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
       </div>
     </div>`;
-    }).join('');
+  }).join('');
 }
