@@ -1,0 +1,41 @@
+{
+  "name": "habitflow-ai",
+  "version": "1.0.0",
+  "description": "GenAI-powered habit breaking and addiction recovery assistant",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage"
+  },
+  "devDependencies": {
+    "vite": "^5.4.0",
+    "jest": "^29.7.0",
+    "@jest/globals": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "src/lib/**/*.js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 70
+      }
+    }
+  },
+  "keywords": [
+    "habit-tracking",
+    "addiction-recovery",
+    "genai",
+    "gemini",
+    "cbt"
+  ],
+  "license": "MIT"
+}
